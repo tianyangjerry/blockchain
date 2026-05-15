@@ -1,0 +1,99 @@
+services:
+    pg:
+        image: postgres:16-alpine
+        environment:
+            POSTGRES_USER: app
+            POSTGRES_PASSWORD: app
+            POSTGRES_DB: blockchain
+        ports:
+            - "5432:5432"
+        healthcheck:
+            test: [ "CMD", "pg_isready", "-U", "app", "-d", "blockchain" ]
+            interval: 5s
+            timeout: 3s
+            retries: 20
+
+    anvil:
+        profiles: [ "anvil" ]
+        image: ghcr.io/foundry-rs/foundry:latest
+        entrypoint: [ "anvil", "--host", "0.0.0.0" ]
+        ports:
+            - "8545:8545"
+
+    ganache:
+        profiles: [ "ganache" ]
+        image: trufflesuite/ganache:v7.9.2
+        command: [ "--host", "0.0.0.0", "--chain.chainId", "1337", "--wallet.totalAccounts", "10", "--wallet.defaultBalance", "100000000" ]
+        ports:
+            - "8545:8545"
+
+    backend:
+        build:
+            context: .
+            dockerfile: Blockchain-backend/Dockerfile
+        environment:
+            PG_DSN: postgres://app:app@pg:5432/blockchain?sslmode=disable
+            RPC_URL: ${CHAIN_RPC:-http://ganache:8545}
+            PRIVATE_KEY: ${CHAIN_DEPLOYER_PRIVATE_KEY:-0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d}
+            AUTH_SECRET: dev-secret
+            ADMIN_ADDRESSES: ${ADMIN_ADDRESSES:-0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266,0xee377eb41092d9e58892102cdbcd65d0158c9bcd}
+            DONATION_CONTRACT_ADDRESS: ${DONATION_CONTRACT_ADDRESS:-0x0D88dBaFA16a0c08feAC89f1A75e2e81E1ea28d5}
+        depends_on:
+            pg:
+                condition: service_healthy
+        ports:
+            - "8080:8080"
+
+    frontend:
+        build:
+            context: .
+            dockerfile: blockchain_front/Dockerfile
+        environment:
+            NEXT_PUBLIC_API_BASE_URL: http://localhost:8080
+            NEXT_PUBLIC_RPC_URL: ${PUBLIC_RPC:-http://localhost:8545}
+            NEXT_PUBLIC_DONATION_CONTRACT: ${NEXT_PUBLIC_DONATION_CONTRACT:-0x0D88dBaFA16a0c08feAC89f1A75e2e81E1ea28d5}
+            NEXT_PUBLIC_DONATION_RECEIVER: ${NEXT_PUBLIC_DONATION_RECEIVER:-0xee377eb41092d9e58892102cdbcd65d0158c9bcd}
+        depends_on:
+            - backend
+        ports:
+            - "3000:3000"
+
+    contracts-builder:
+        image: node:20-alpine
+        working_dir: /app/contracts
+        volumes:
+            - ./contracts:/app/contracts
+        environment:
+            CI: "true"
+            NPM_CONFIG_REGISTRY: https://registry.npmmirror.com
+        command: /bin/sh -lc "npm i -g pnpm@9.10.0 --registry=https://registry.npmmirror.com && pnpm config set registry https://registry.npmmirror.com && pnpm i --force && pnpm build"
+        # 不依赖其他服务，随时可单独执行，输出会写回宿主机的 contracts/artifacts
+        restart: "no"
+
+    contracts-deployer:
+        image: node:20-alpine
+        working_dir: /app/contracts
+        environment:
+            BACKEND_BASE: http://backend:8080
+            TEMPLATE: SimpleRegistry
+            ARGS: "[]"
+            RPC_URL: ${CHAIN_RPC:-http://anvil:8545}
+            CI: "true"
+            NPM_CONFIG_REGISTRY: https://registry.npmmirror.com
+        volumes:
+            - ./contracts:/app/contracts
+        command: /bin/sh -lc "npm i -g pnpm@9.10.0 --registry=https://registry.npmmirror.com && pnpm config set registry https://registry.npmmirror.com && pnpm i --force && npx hardhat run scripts/deploy-to-backend.ts --network localhost"
+        restart: "no"
+
+    contracts-seeder:
+        build:
+            context: ./contracts
+            dockerfile: Dockerfile.seeder
+        environment:
+            BACKEND_BASE: http://backend:8080
+            RPC_URL: ${CHAIN_RPC:-http://anvil:8545}
+            SEED_CAMPAIGNS: ${SEED_CAMPAIGNS:-50}
+            SEED_DONATIONS: ${SEED_DONATIONS:-200}
+            SEED_CONCURRENCY: ${SEED_CONCURRENCY:-40}
+        depends_on:
+            - backend

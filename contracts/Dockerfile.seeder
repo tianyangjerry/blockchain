@@ -1,0 +1,19 @@
+FROM node:20-alpine
+WORKDIR /app/contracts
+
+# Faster registry for CN; safe for global use
+ENV NPM_CONFIG_REGISTRY=https://registry.npmmirror.com
+
+RUN npm i -g pnpm@9.10.0 --registry=https://registry.npmmirror.com
+
+# Install deps first to leverage Docker layer cache
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm i --frozen-lockfile=false
+
+# Copy source and build
+COPY . .
+
+# Entrypoint runs the seed script; runtime env: BACKEND_BASE / RPC_URL / SEED_*
+CMD ["sh","-lc","npx hardhat run scripts/seed-ganache.ts --network localhost --no-compile"]
+
+

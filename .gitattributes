@@ -1,0 +1,37 @@
+* text=auto
+
+# Normalize LF for text files
+*.js   text eol=lf
+*.ts   text eol=lf
+*.tsx  text eol=lf
+*.jsx  text eol=lf
+*.json text eol=lf
+*.css  text eol=lf
+*.mjs  text eol=lf
+*.cjs  text eol=lf
+*.md   text eol=lf
+*.sh   text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.sol  text eol=lf
+*.go   text eol=lf
+
+# Binary / generated
+*.png  -text
+*.jpg  -text
+*.jpeg -text
+*.gif  -text
+*.svg  -text
+*.ico  -text
+*.zip  -text
+*.gz   -text
+*.br   -text
+*.woff -text
+*.woff2 -text
+*.ttf  -text
+*.eot  -text
+*.pdf  -text
+*.tsbuildinfo -text
+contracts/artifacts/** -text
+contracts/cache/**     -text
+Blockchain-backend/*.exe -text

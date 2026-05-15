@@ -1,0 +1,5 @@
+# Frontend .gitignore kept minimal; root .gitignore controls most ignores
+node_modules/
+.next/
+out/
+.env*

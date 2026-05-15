@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Motion: 黑金极简入场动效 */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes glow-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(245, 197, 66, 0.18);
+  }
+
+  70% {
+    box-shadow: 0 0 0 12px rgba(245, 197, 66, 0.0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(245, 197, 66, 0.0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in .6s ease-out both;
+}
+
+.animate-slide-up {
+  animation: slide-up .6s ease-out both;
+}
+
+.animate-glow {
+  animation: glow-pulse 2.4s ease-in-out infinite;
+}

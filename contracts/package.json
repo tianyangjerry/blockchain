@@ -1,0 +1,23 @@
+{
+    "name": "contracts",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "build": "hardhat compile",
+        "deploy": "hardhat run scripts/deploy.ts --network localhost",
+        "deploy:ercs": "hardhat run scripts/deploy-ercs.ts --network localhost",
+        "deploy:badge": "hardhat run scripts/deploy-badge.ts --network localhost",
+        "seed:ganache": "hardhat run scripts/seed-ganache.ts --network localhost",
+        "deploy:donation": "hardhat run scripts/deploy-donation.ts --network localhost",
+        "create:camps": "hardhat run scripts/create-campaigns.ts --network localhost",
+        "simulate:donate": "hardhat run scripts/simulate-donate.ts --network localhost"
+    },
+    "devDependencies": {
+        "hardhat": "^2.22.9",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.5.4",
+        "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+        "@openzeppelin/contracts": "^5.0.2",
+        "ethers": "^6.13.2"
+    }
+}
